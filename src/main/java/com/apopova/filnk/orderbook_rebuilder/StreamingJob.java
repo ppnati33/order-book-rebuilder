@@ -31,7 +31,7 @@ public class StreamingJob {
 
     private void run() throws Exception {
         final StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
-        env.enableCheckpointing(parameters.getLong("checkpointing_interval_ms", CHECKPOINTING_INTERVAL_MS));
+        env.enableCheckpointing(parameters.getLong("checkpointing-interval-ms", CHECKPOINTING_INTERVAL_MS));
 
         final OutputTag<Instant> eventsTimestampOutput = new OutputTag<>("side-output") {
         };
@@ -55,6 +55,6 @@ public class StreamingJob {
             .addSink(new DiscardingSink<>())
             .name(DiscardingSink.class.getSimpleName());
 
-        env.execute(StreamingJob.class.getSimpleName());
+        env.execute(parameters.get("job-name"));
     }
 }
