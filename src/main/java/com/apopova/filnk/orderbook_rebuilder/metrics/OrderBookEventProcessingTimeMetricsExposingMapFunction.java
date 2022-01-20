@@ -2,30 +2,32 @@ package com.apopova.filnk.orderbook_rebuilder.metrics;
 
 import com.codahale.metrics.UniformReservoir;
 import org.apache.flink.api.common.functions.RichMapFunction;
+import org.apache.flink.api.java.tuple.Tuple2;
 import org.apache.flink.configuration.Configuration;
-import org.apache.flink.dropwizard.metrics.DropwizardHistogramWrapper;
-import org.apache.flink.metrics.Histogram;
+import org.apache.flink.metrics.Gauge;
 
-public class OrderBookEventProcessingTimeMetricsExposingMapFunction extends RichMapFunction<Long, Long> {
+public class OrderBookEventProcessingTimeMetricsExposingMapFunction extends RichMapFunction<Tuple2<Long, Long>, Tuple2<Long, Long>> {
 
-  private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1L;
 
-  private transient Histogram histogram;
+    private transient Long min;
+    private transient Long max;
 
-  @Override
-  public void open(Configuration config) {
-    com.codahale.metrics.Histogram dropwizardHistogram =
-        new com.codahale.metrics.Histogram(new UniformReservoir(5000));
-
-    this.histogram =
+    @Override
+    public void open(Configuration config) {
         getRuntimeContext()
             .getMetricGroup()
-            .histogram("my_custom_histogram", new DropwizardHistogramWrapper(dropwizardHistogram));
-  }
+            .gauge("min_gauge", (Gauge<Long>) () -> min);
 
-  @Override
-  public Long map(Long value) throws Exception {
-    this.histogram.update(value);
-    return value;
-  }
+        getRuntimeContext()
+            .getMetricGroup()
+            .gauge("max_gauge", (Gauge<Long>) () -> max);
+    }
+
+    @Override
+    public Tuple2<Long, Long> map(Tuple2<Long, Long> value) throws Exception {
+        max = value.f0;
+        min = value.f1;
+        return value;
+    }
 }

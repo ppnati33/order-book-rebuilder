@@ -9,7 +9,7 @@ services:
     - "8081:8081"
     - "9249:9249"
     volumes:
-    - state:/state
+    - state-in-memory:/state
     command: standalone-job --job-classname com.apopova.filnk.orderbook_rebuilder.StreamingJob --job-id 00000000000000000000000000000000 --job-name "StreamingJob-InMemory" --checkpointing-interval-ms 90000
     environment:
     - |
@@ -24,7 +24,7 @@ services:
     ports:
     - "9250:9249"
     volumes:
-    - state:/state
+    - state-in-memory:/state
     command: taskmanager
     environment:
     - |
@@ -40,13 +40,13 @@ services:
       - "8082:8081"
       - "9251:9249"
     volumes:
-      - state:/state
+      - state-rocks-db:/Users/anastasiyapopova/Documents/development/ob-rebuilder-rocks-db
     command: standalone-job --job-classname com.apopova.filnk.orderbook_rebuilder.StreamingJob --job-id 00000000000000000000000000000001 --job-name "StreamingJob-RocksDB" --checkpointing-interval-ms 90000
     environment:
       - |
         FLINK_PROPERTIES=
         jobmanager.rpc.address: job-cluster-rocks-db
-        jobmanager.memory.process.size: 1024m
+        jobmanager.memory.process.size: 3000m
         state.checkpoints.dir: file:///state-rocks-db
 
   taskmanager-rock-db:
@@ -55,13 +55,13 @@ services:
     ports:
       - "9252:9249"
     volumes:
-      - state:/state
+      - state-rocks-db:/Users/anastasiyapopova/Documents/development/ob-rebuilder-rocks-db
     command: taskmanager
     environment:
       - |
         FLINK_PROPERTIES=
         jobmanager.rpc.address: job-cluster-rocks-db
-        taskmanager.memory.process.size: 1024m
+        taskmanager.memory.process.size: 3000m
         state.backend: rocksdb
         state.checkpoints.dir: file:///state-rocks-db
 
@@ -85,4 +85,5 @@ services:
     - ./grafana/provisioning/:/etc/grafana/provisioning/
 
 volumes:
-  state:
+  state-in-memory:
+  state-rocks-db:
