@@ -43,6 +43,8 @@ services:
       - ./config/flink-jars/:/opt/flink/connector-lib/
       - ./logs/flink-checkpoints/:/flink-checkpoints
       - ./logs/flink-savepoints/:/flink-savepoints
+      - ./out/jobmanager/:/opt/artifacts/out
+      - ./tmp/jobmanager/:/tmp
     command: standalone-job --job-classname com.apopova.filnk.orderbook_rebuilder.StreamingJob --job-id 00000000000000000000000000000001 --job-name "StreamingJob-RocksDB" --checkpointing-interval-ms 90000
     environment:
       - |
@@ -52,6 +54,7 @@ services:
         state.backend: rocksdb
         state.checkpoints.dir: file:///flink-checkpoints
         state.savepoints.dir: file:///flink-savepoints
+        state.backend.local-recovery: true
 
   taskmanager-rock-db:
     build: .
@@ -62,7 +65,8 @@ services:
       - ./logs/taskmanager/:/opt/flink/log/
       - ./logs/flink-checkpoints/:/flink-checkpoints
       - ./logs/flink-savepoints/:/flink-savepoints
-      - ./tmp:/tmp
+      - ./out/taskmanager/:/opt/artifacts/out
+      - ./tmp/taskmanager/:/tmp
     command: taskmanager
     environment:
       - |
@@ -72,6 +76,7 @@ services:
         state.backend: rocksdb
         state.checkpoints.dir: file:///flink-checkpoints
         taskmanager.numberOfTaskSlots: 2
+        state.backend.local-recovery: true
 
   prometheus:
     image: prom/prometheus:v2.32.1
